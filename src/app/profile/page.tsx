@@ -327,7 +327,7 @@ function ProfileContent() {
                           <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Logo Institucional (Recomendado: Fondo transparente)</Label>
                           <div className="flex flex-col md:flex-row items-center gap-6 p-8 border-2 border-dashed rounded-3xl bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 transition-colors cursor-pointer group">
                             <div className="w-48 h-24 bg-white dark:bg-white rounded-2xl shadow-inner border-2 border-slate-200 flex items-center justify-center overflow-hidden transition-transform group-hover:scale-105">
-                              {photoPreview ? <img src={photoPreview} className="max-w-full max-h-full object-contain p-2" /> : <Building2 className="w-10 h-10 text-slate-200" />}
+                              {photoPreview ? <img src={photoPreview} alt="Logo de la clínica" className="max-w-full max-h-full object-contain p-2" /> : <Building2 className="w-10 h-10 text-slate-200" />}
                             </div>
                             <div className="flex-1 text-center md:text-left space-y-2">
                                <p className="text-sm font-bold">Cargar nueva imagen</p>

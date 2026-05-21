@@ -149,7 +149,9 @@ function AppointmentsContent() {
 
   const doctorOptions = useMemo(() => {
     if (staffMembers.length > 0) {
-      return staffMembers.map((s) => ({
+      return staffMembers
+        .filter((s) => s.role !== 'clinic')
+        .map((s) => ({
         id: s.id,
         label: s.fullName || s.username || 'Sin nombre',
         role: s.role,
@@ -160,9 +162,9 @@ function AppointmentsContent() {
       {
         id: currentUser?.id || '',
         label: currentUser?.fullName || currentUser?.full_name || currentUser?.email || 'Odontologo',
-        role: 'doctor',
+        role: currentUser?.role || 'doctor',
       },
-    ];
+    ].filter((u) => u.role !== 'clinic');
   }, [staffMembers, currentUser]);
 
   const [form, setForm] = useState({
@@ -449,10 +451,21 @@ function AppointmentsContent() {
                   </div>
 
                   <div className="col-span-2 space-y-3">
-                    <Label className="text-sm font-semibold">Servicios / Tratamientos</Label>
-                    <div className="flex gap-2 items-center">
-                      <Select onValueChange={(tid) => setForm({ ...form, treatmentId: tid })} value={form.treatmentId || undefined}>
-                        <SelectTrigger className="h-11"><SelectValue placeholder="Seleccione un servicio..." /></SelectTrigger>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-sm font-semibold">Servicios Añadidos</Label>
+                      <Select 
+                        value={form.treatmentId || undefined} 
+                        onValueChange={(tid) => {
+                          const t = treatments.find(x => x.id === tid);
+                          if (t) {
+                            const updated = [...form.selectedTreatments, { id: t.id, name: t.name, price: Number(t.price) }];
+                            setForm({ ...form, selectedTreatments: updated, cost: updated.reduce((s, x) => s + x.price, 0), treatmentId: '' });
+                          }
+                        }}
+                      >
+                        <SelectTrigger className="w-fit h-9 px-4 bg-primary text-primary-foreground hover:bg-primary/90 font-bold border-none rounded-xl [&>svg:last-child]:hidden shadow-sm transition-all active:scale-95">
+                          <Plus className="w-4 h-4 mr-2" /> Añadir Servicio
+                        </SelectTrigger>
                         <SelectContent>
                           {treatments.filter((t) => !form.selectedTreatments.some((st) => st.id === t.id)).map((t) => (
                             <SelectItem key={t.id} value={t.id}>
@@ -464,13 +477,6 @@ function AppointmentsContent() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <Button type="button" variant="outline" className="h-11 px-3 shrink-0" onClick={() => {
-                        const t = treatments.find(x => x.id === form.treatmentId);
-                        if (t) {
-                          const updated = [...form.selectedTreatments, { id: t.id, name: t.name, price: Number(t.price) }];
-                          setForm({ ...form, selectedTreatments: updated, cost: updated.reduce((s, x) => s + x.price, 0), treatmentId: '' });
-                        }
-                      }} disabled={!form.treatmentId}><Plus className="w-4 h-4" /></Button>
                     </div>
 
                     {/* LISTA DE SERVICIOS SELECCIONADOS */}
@@ -560,8 +566,8 @@ function AppointmentsContent() {
                       <span className="flex items-center font-bold">:</span>
                       <Select value={getTimeParts().minute} onValueChange={(v) => handleTimeChange12h(getTimeParts().hour, v, getTimeParts().period)}>
                         <SelectTrigger className="w-[80px]"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {['00', '15', '30', '45'].map((m) => (
+                        <SelectContent className="max-h-[300px]">
+                          {Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, '0')).map((m) => (
                             <SelectItem key={m} value={m}>{m}</SelectItem>
                           ))}
                         </SelectContent>

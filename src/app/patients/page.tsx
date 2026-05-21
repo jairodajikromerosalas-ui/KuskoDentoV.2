@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { AuthProvider, useAuth } from '@/hooks/use-auth';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
-import { fetchDniData } from '@/app/api/reniec/api';
 import { Input } from '@/components/ui/input';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
 import { Card } from '@/components/ui/card';
@@ -108,8 +107,10 @@ function PatientsContent() {
     }
     setIsValidatingDni(true);
     try {
-      const data = await fetchDniData(newPatient.dni);
-      // Ajusta los campos según la respuesta real de la API
+      const res = await fetch(`/api/reniec?dni=${newPatient.dni}`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || 'Error al consultar RENIEC');
+      const data = json?.data ?? json;
       const nombres = data?.nombres || data?.nombre || '';
       const apellidoPaterno = data?.apellido_paterno || '';
       const apellidoMaterno = data?.apellido_materno || '';
@@ -144,12 +145,12 @@ function PatientsContent() {
     };
 
     staffUsers
-      .filter((staff) => staff.status !== 'inactive')
+      .filter((staff) => staff.status !== 'inactive' && staff.role !== 'clinic')
       .forEach((staff) => {
         pushOption(staff.id, staff.fullName || staff.username || staff.dni);
       });
 
-    if (user) {
+    if (user && user.role !== 'clinic') {
       pushOption(user.id, user.fullName || user.full_name || user.email);
     }
 
@@ -467,7 +468,7 @@ function PatientsContent() {
                       <TableRow key={p.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors">
                         <TableCell className="font-mono text-xs">{p.dni}</TableCell>
                         <TableCell className="font-black text-slate-800 dark:text-slate-100">
-                          {nameData.lastNames ? `${nameData.lastNames}, ${nameData.names}` : p.full_name}
+                          {nameData.lastNames ? `${nameData.names} ${nameData.lastNames}` : p.full_name}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">

@@ -1,33 +1,41 @@
 import axios from 'axios';
 
-const API_TOKEN = 'pon el token aquí';
+const API_TOKEN = process.env.RENIEC_API_TOKEN;
 const BASE_URL = 'https://apiperu.dev/api';
 
-const fetchData = async (endpoint) => {
-  const apiUrl = `${BASE_URL}${endpoint}?api_token=${API_TOKEN}`;
+export interface ReniecDniData {
+  nombres?: string;
+  nombre?: string;
+  nombre_completo?: string;
+  apellido_paterno?: string;
+  apellido_materno?: string;
+  [key: string]: unknown;
+}
 
-  try {
-    const response = await axios.get(apiUrl, {
-      httpsAgent: {
-        rejectUnauthorized: false,
-      },
-    });
+export interface ReniecRucData {
+  nombre_o_razon_social?: string;
+  [key: string]: unknown;
+}
 
-    const { data } = response;
-    if (data.success) {
-      return data.data;
-    } else {
-      throw new Error('No se encontraron registros.');
-    }
-  } catch (err) {
-    throw new Error(err.message);
+const fetchData = async <T>(endpoint: string): Promise<T> => {
+  if (!API_TOKEN) {
+    throw new Error('RENIEC_API_TOKEN no está configurado en las variables de entorno.');
   }
+
+  const apiUrl = `${BASE_URL}${endpoint}?api_token=${API_TOKEN}`;
+  const response = await axios.get<{ success: boolean; data: T }>(apiUrl);
+
+  if (response.data.success) {
+    return response.data.data;
+  }
+
+  throw new Error('No se encontraron registros.');
 };
 
-export const fetchDniData = async (dni) => {
-  return await fetchData(`/dni/${dni}`);
+export const fetchDniData = (dni: string): Promise<ReniecDniData> => {
+  return fetchData<ReniecDniData>(`/dni/${dni}`);
 };
 
-export const fetchRucData = async (ruc) => {
-  return await fetchData(`/ruc/${ruc}`);
+export const fetchRucData = (ruc: string): Promise<ReniecRucData> => {
+  return fetchData<ReniecRucData>(`/ruc/${ruc}`);
 };

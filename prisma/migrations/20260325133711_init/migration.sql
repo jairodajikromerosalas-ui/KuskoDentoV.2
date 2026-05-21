@@ -14,7 +14,7 @@ CREATE TABLE `Clinic` (
     `subscription_tier` VARCHAR(191) NOT NULL DEFAULT 'basic',
     `next_payment_date` DATETIME(3) NULL,
     `contract_start_date` DATETIME(3) NULL,
-    `subscription_fee` DECIMAL(10, 2) NOT NULL DEFAULT 50.00;
+    `subscription_fee` DECIMAL(10, 2) NOT NULL DEFAULT 50.00,
     `created_by` VARCHAR(191) NULL,
     `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `updated_at` DATETIME(3) NOT NULL,
@@ -139,6 +139,24 @@ CREATE TABLE `Appointment` (
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+
+-- CreateTable
+CREATE TABLE `AppointmentTreatment` (
+    `id` VARCHAR(191) NOT NULL,
+    `clinic_id` VARCHAR(191) NOT NULL,
+    `appointment_id` VARCHAR(191) NOT NULL,
+    `treatment_id` VARCHAR(191) NOT NULL,
+    `price` DECIMAL(10, 2) NOT NULL,
+    `observations` VARCHAR(191) NULL,
+    `created_at` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
+    `updated_at` DATETIME(3) NOT NULL,
+
+    INDEX `AppointmentTreatment_clinic_id_idx`(`clinic_id`),
+    INDEX `AppointmentTreatment_appointment_id_idx`(`appointment_id`),
+    INDEX `AppointmentTreatment_treatment_id_idx`(`treatment_id`),
+    UNIQUE INDEX `AppointmentTreatment_appointment_id_treatment_id_key`(`appointment_id`, `treatment_id`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 -- CreateTable
 CREATE TABLE `Payment` (

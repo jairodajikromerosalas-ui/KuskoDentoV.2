@@ -141,7 +141,7 @@ export const paymentService = {
         },
       });
 
-      const updated = await tx.payment.update({
+      await tx.payment.update({
         where: { id: payment.id },
         data: {
           total_paid: nextTotalPaid,

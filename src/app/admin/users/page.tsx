@@ -18,7 +18,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { addMonths, format, parseISO, isValid } from 'date-fns';
-import { fetchDniData } from '@/app/api/reniec/api';
 
 type SaveUserPayload = {
   id?: string;
@@ -58,7 +57,7 @@ function UsersContent() {
     { clinicId: string; amount: number; installments: number; nextPaymentDate: string; concept: string }
   >('/api/admin/subscription-payments', 'POST');
 
-  const users = usersData?.items ?? [];
+  const users = (usersData?.items ?? []).filter(u => currentUser?.role === 'admin' || u.role !== 'clinic');
   const [isOpen, setIsOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -110,19 +109,21 @@ function UsersContent() {
 
     setIsValidatingDni(true);
     try {
-      const data = await fetchDniData(form.dni);
-      // Ajusta el nombre según la estructura de respuesta real de la API
-      const nombre = data?.nombre_completo || data?.nombres || data?.nombre || "NOMBRES RECUPERADOS DE RENIEC";
+      const res = await fetch(`/api/reniec?dni=${form.dni}`);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json?.error || 'Error al consultar RENIEC');
+      const data = json?.data ?? json;
+      const nombre = data?.nombre_completo || data?.nombres || data?.nombre || '';
       setForm(prev => ({ ...prev, fullName: nombre }));
-      toast({ 
-        title: "Identidad Validada", 
-        description: "Datos recuperados correctamente de RENIEC." 
+      toast({
+        title: "Identidad Validada",
+        description: "Datos recuperados correctamente de RENIEC."
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         variant: "destructive",
         title: "Error al validar DNI",
-        description: error?.message || "No se pudo obtener datos del DNI."
+        description: error instanceof Error ? error.message : "No se pudo obtener datos del DNI."
       });
     } finally {
       setIsValidatingDni(false);
